@@ -7,12 +7,12 @@ const { v4: uuidV4 } = require("uuid");
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-app.get('/', (req, res) => {
-  res.redirect(`/${uuidV4()}`);
+app.get('/room', (req, res) => {
+  res.redirect(`/room${uuidV4()}`);
 
 });
 
-app.get('/:room', (req,res) => {
+app.get('/room:room', (req,res) => {
   res.render('room', { roomId: req.params.room });
 
 });
@@ -28,5 +28,6 @@ io.on('connection', socket => {
     })
   });
 });
+
 
 server.listen(3000);
