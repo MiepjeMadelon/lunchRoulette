@@ -12,6 +12,10 @@ app.get('/room', (req, res) => {
 
 });
 
+app.get('/', (req, res) => {
+  res.render('button');
+});
+
 app.get('/room:room', (req,res) => {
   res.render('room', { roomId: req.params.room });
 
