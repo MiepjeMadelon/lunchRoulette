@@ -38,6 +38,10 @@ app.get('/', (req, res) => {
   res.render('button');
 });
 
+app.get('/logged_out', (req, res) => {
+  res.redirect('/');
+});
+
 app.get('/room:room', (req,res) => {
   res.render('room', { roomId: req.params.room });
 
