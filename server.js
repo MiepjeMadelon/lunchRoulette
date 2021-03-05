@@ -25,6 +25,7 @@ const oidc = new ExpressOIDC({
 
 // ExpressOIDC attaches handlers for the /login and /authorization-code/callback routes
 app.use(oidc.router);
+app.all('*', oidc.ensureAuthenticated()); //should be after app.use, appearently the order does matter
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
@@ -41,6 +42,7 @@ app.get('/room:room', (req,res) => {
   res.render('room', { roomId: req.params.room });
 
 });
+
 
 io.on('connection', socket => {
   socket.on('join-room', (roomId, userId) => {
