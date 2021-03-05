@@ -3,7 +3,28 @@ const app = express();
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
+const session = require('express-session');
+const { ExpressOIDC } = require('@okta/oidc-middleware');
+require('dotenv').config();
 
+// session support is required to use ExpressOIDC
+app.use(session({
+  secret: process.env.CLIENT_SECRET,
+  resave: true,
+  saveUninitialized: false
+}));
+
+const oidc = new ExpressOIDC({
+  appBaseUrl: process.env.APP_BASE_URL,
+  issuer: process.env.ISSUER,
+  client_id: process.env.CLIENT_ID,
+  client_secret: process.env.CLIENT_SECRET,
+  loginRedirectUri: 'http://localhost:3000/authorization-code/callback',
+  scope: 'openid profile'
+});
+
+// ExpressOIDC attaches handlers for the /login and /authorization-code/callback routes
+app.use(oidc.router);
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
