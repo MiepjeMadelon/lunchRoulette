@@ -1,3 +1,3 @@
 
-const usernameHolder = document.getElementById("usernameHolder");
+const usernameHolder = document.getElementById("navbarDropdownMenuLink");
 usernameHolder.innerText = USERNAME;
