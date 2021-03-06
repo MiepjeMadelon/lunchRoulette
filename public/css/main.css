@@ -1,0 +1,13 @@
+body{
+  margin:0;
+  overflow:hidden;
+}
+.sidebar{
+  background: #212529;
+  height: 100vh;
+  color: #F1F1F1;
+}
+.contentWrapper {
+  margin: 0;
+  padding: 0;
+}

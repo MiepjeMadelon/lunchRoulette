@@ -36,13 +36,13 @@ app.get('/room', (req, res) => {
 
 app.get('/', (req, res) => {
   if (req.userContext.userinfo) {
-    res.redirect(`/button${req.userContext.userinfo.name}${req.userContext.userinfo.sub}`);
+    res.redirect(`/home${req.userContext.userinfo.name}${req.userContext.userinfo.sub}`);
   } else {
     res.send('Please Sign In');
   }
 });
-app.get('/button:username:uid', (req,res) => {
-  res.render('button', { username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
+app.get('/home:username:uid', (req,res) => {
+  res.render('home', { username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
 });
 
 
