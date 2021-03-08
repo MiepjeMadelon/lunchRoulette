@@ -5,8 +5,9 @@ const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 const session = require('express-session');
 const { ExpressOIDC } = require('@okta/oidc-middleware');
+const formatMessage = require('./utils/messages');
 require('dotenv').config();
-
+const botName = "Chat Bot";
 const oidc = new ExpressOIDC({
   appBaseUrl: process.env.APP_BASE_URL,
   issuer: process.env.ISSUER,
@@ -16,6 +17,8 @@ const oidc = new ExpressOIDC({
   logoutRedirectUri: 'http://localhost:3000/logged_out',
   scope: 'openid profile'
 });
+//const mongoose = require('mongoose');
+
 
 // session support is required to use ExpressOIDC
 app.use(session({
@@ -55,6 +58,12 @@ app.get('/room:room', (req,res) => {
 
 });
 
+app.get('/general', (req, res) => {
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10"}) //should be general + companyId
+});
+app.get('/memes', (req, res) => {
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10"}) //should be general + companyId
+});
 
 io.on('connection', socket => {
   socket.on('join-room', (roomId, userId) => {
@@ -64,7 +73,16 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => {
       socket.to(roomId).broadcast.emit('user-disconnected', userId);
-    })
+    });
+  });
+
+  socket.on('join-chat', (chatId, username, userId) => {
+    console.log(chatId, username, userId);
+    socket.join(chatId);
+
+  });
+  socket.on('chatMessage', (msg, chatId, username) => {
+    io.to(chatId).emit('message', formatMessage(username, msg));
   });
 });
 
