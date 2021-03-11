@@ -10,7 +10,7 @@ chatForm.addEventListener('submit', (e) => {
   if (!msg) {
     return false;
   }
-  socket.emit('chatMessage', msg, CHAT_ID, USERNAME);
+  socket.emit('chatMessage', msg, CHAT_ID, USERNAME, USERID);
   e.target.elements.msg.value = '';
   e.target.elements.msg.focus();
 });

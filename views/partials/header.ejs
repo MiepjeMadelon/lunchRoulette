@@ -8,7 +8,9 @@
         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
           <a class="dropdown-item" href="#">Action</a>
           <a class="dropdown-item" href="#">Another action</a>
-          <a href="/logout">Log out</a>
+          <form method="post" action="/logout">
+            <button id="logout-button" type="submit">Logout</button>
+          </form>
         </div>
       </li>
     </ul>

@@ -5,7 +5,7 @@ const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 const session = require('express-session');
 const { ExpressOIDC } = require('@okta/oidc-middleware');
-const formatMessage = require('./utils/messages');
+const {Message, formatMessage, saveMessage} = require('./utils/messages');
 require('dotenv').config();
 const botName = "Chat Bot";
 const oidc = new ExpressOIDC({
@@ -17,8 +17,23 @@ const oidc = new ExpressOIDC({
   logoutRedirectUri: 'http://localhost:3000/logged_out',
   scope: 'openid profile'
 });
-//const mongoose = require('mongoose');
+const mongoose = require('mongoose'); //warning save to ignore: https://developer.mongodb.com/community/forums/t/warning-accessing-non-existent-property-mongoerror-of-module-exports-inside-circular-dependency/15411
 
+
+const dbURI  = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@companypub.xsm4m.mongodb.net/company-pub?retryWrites=true&w=majority`;
+mongoose
+.connect(dbURI, {
+useUnifiedTopology: true,
+useNewUrlParser: true,
+})
+.then(() => {
+  oidc.on('ready', () => {
+    server.listen(3000);
+  });
+})
+.catch(err => {
+console.log(`DB Connection Error: ${err.message}`);
+}); //warning save to ignore: https://developer.mongodb.com/community/forums/t/node-44612-deprecationwarning-listening-to-events-on-the-db-class-has-been-deprecated-and-will-be-removed-in-the-next-major-version/15849
 
 // session support is required to use ExpressOIDC
 app.use(session({
@@ -48,7 +63,10 @@ app.get('/home:username:uid', (req,res) => {
   res.render('home', { username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
 });
 
-
+app.get('/logout', function(req, res, next) {
+    req.logout();
+    return res.redirect('/logged_out');
+});
 app.get('/logged_out', (req, res) => {
   res.redirect('/');
 });
@@ -81,10 +99,8 @@ io.on('connection', socket => {
     socket.join(chatId);
 
   });
-  socket.on('chatMessage', (msg, chatId, username) => {
+  socket.on('chatMessage', (msg, chatId, username, userId) => {
     io.to(chatId).emit('message', formatMessage(username, msg));
+    saveMessage(username, userId, msg, chatId);
   });
 });
-
-
-server.listen(3000);
