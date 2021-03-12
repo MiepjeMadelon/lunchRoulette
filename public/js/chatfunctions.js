@@ -15,6 +15,21 @@ chatForm.addEventListener('submit', (e) => {
   e.target.elements.msg.focus();
 });
 
+socket.on('oldMessages', listOfMessages => {
+  for (var i = 0; i < listOfMessages.length; i++) {
+    date = listOfMessages[i].createdAt;
+    uname = listOfMessages[i].username;
+    message = listOfMessages[i].message;
+    msg = {
+      username: uname,
+      msg: message,
+      time: date
+    };
+    makeMessage(msg);
+  }
+  console.log(listOfMessages);
+})
+
 socket.on('message', formattedMessage => {
   makeMessage(formattedMessage);
   console.log('formattedMessage');

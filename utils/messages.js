@@ -32,6 +32,28 @@ function formatMessage(username, msg) {
   };
 }
 
+function findOldMessages(chatID) {
+  Message.find({ chatId: chatID}).lean().exec(function (err, docs) {
+      if (err){
+          console.log('an error has occured' + err);
+      }
+      else{
+          documents = docs;
+          console.log(docs);
+          return documents;
+      }
+    });
+}
+
+
+function formatOldMessage(uname, message, date) {
+  return {
+    username: uname,
+    msg: message,
+    time: date
+  };
+}
+
 function saveMessage(uname, uID, msg, chatID) {
   const message = new Message({
     username: uname,
@@ -49,4 +71,4 @@ function saveMessage(uname, uID, msg, chatID) {
     });
 }
 
-module.exports = {Message, formatMessage, saveMessage};
+module.exports = {Message, formatMessage, saveMessage, findOldMessages};

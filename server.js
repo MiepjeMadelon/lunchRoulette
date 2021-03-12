@@ -5,7 +5,7 @@ const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 const session = require('express-session');
 const { ExpressOIDC } = require('@okta/oidc-middleware');
-const {Message, formatMessage, saveMessage} = require('./utils/messages');
+const {Message, formatMessage, saveMessage, findOldMessages} = require('./utils/messages');
 require('dotenv').config();
 const botName = "Chat Bot";
 const oidc = new ExpressOIDC({
@@ -79,6 +79,7 @@ app.get('/room:room', (req,res) => {
 app.get('/general', (req, res) => {
   res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10"}) //should be general + companyId
 });
+
 app.get('/memes', (req, res) => {
   res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10"}) //should be general + companyId
 });
@@ -96,7 +97,24 @@ io.on('connection', socket => {
 
   socket.on('join-chat', (chatId, username, userId) => {
     console.log(chatId, username, userId);
-    socket.join(chatId);
+    var oldMessages;
+    Message.find({ chatId: chatId}, (err, docs) => {
+        if (err){
+            console.log('an error has occured' + err);
+        }
+        // else{
+        //     documents = docs;
+        //     console.log(docs);
+        //     return documents;
+        // }
+      }).then((data) => {
+        oldMessages = data;
+        console.log('data =' + data)
+        console.log('old: ' + oldMessages);
+        listOfMessages = oldMessages;
+        socket.emit('oldMessages', listOfMessages);
+        socket.join(chatId);
+      });
 
   });
   socket.on('chatMessage', (msg, chatId, username, userId) => {
@@ -104,3 +122,16 @@ io.on('connection', socket => {
     saveMessage(username, userId, msg, chatId);
   });
 });
+
+function findOlderMessages(chatID) {
+  Message.find({ chatId: chatID}, (err, docs) => {
+      if (err){
+          console.log('an error has occured' + err);
+      }
+      else{
+          documents = docs;
+          console.log(docs);
+          return documents;
+      }
+    });
+}
