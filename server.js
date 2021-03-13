@@ -48,10 +48,6 @@ app.all('*', oidc.ensureAuthenticated()); //should be after app.use, appearently
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-app.get('/room', (req, res) => {
-  res.redirect(`/room${uuidV4()}`);
-});
-
 app.get('/', (req, res) => {
   if (req.userContext.userinfo) {
     res.redirect(`/home${req.userContext.userinfo.name}${req.userContext.userinfo.sub}`);
@@ -71,17 +67,25 @@ app.get('/logged_out', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/room:room', (req,res) => {
-  res.render('room', { roomId: req.params.room, username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
 
+
+
+app.get('/room/:chatName', (req, res) => {
+  res.redirect(`/room/${req.params.chatName}/${uuidV4()}`);
 });
 
+app.get('/room/:chatName/:room', (req,res) => {
+  res.render('room', { roomId: req.params.room, chatName: req.params.chatName ,username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
+  console.log(req.params.room, req.params.chatName)
+});
+
+
+//these two should be changed to be handled by the same app.get() function
 app.get('/general', (req, res) => {
-  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10"}) //should be general + companyId
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10", chatName: "general"}) //should be general + companyId
 });
-
 app.get('/memes', (req, res) => {
-  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10"}) //should be general + companyId
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10", chatName: "memes"}) //should be general + companyId
 });
 
 io.on('connection', socket => {

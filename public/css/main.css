@@ -2,11 +2,6 @@ body{
   margin:0;
   overflow:hidden;
 }
-.sidebar{
-  background: #212529;
-  height: 100vh;
-  color: #F1F1F1;
-}
 .contentWrapper {
   margin: 0;
   padding: 0;
@@ -24,6 +19,25 @@ video {
   height: 90%;
   object-fit: cover;
 }
+
+.sidebar{
+  background: #212529;
+  height: 100vh;
+  color: #F1F1F1;
+}
+.sidebar ul {
+  list-style-type: none; /* Remove bullets */
+}
+.sidebar a {
+  text-decoration: none;
+  color: #F1F1F1;
+}
+
+.sidebarTitle {
+  margin-left: -20px;
+  font-size: 1.25em;
+}
+
 
 
 
