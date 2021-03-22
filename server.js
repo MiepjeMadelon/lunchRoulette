@@ -5,9 +5,8 @@ const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 const session = require('express-session');
 const { ExpressOIDC } = require('@okta/oidc-middleware');
-const {Message, formatMessage, saveMessage, findOldMessages} = require('./utils/messages');
 require('dotenv').config();
-const botName = "Chat Bot";
+const {Message, formatMessage, saveMessage, findOldMessages} = require('./utils/messages');
 const oidc = new ExpressOIDC({
   appBaseUrl: process.env.APP_BASE_URL,
   issuer: process.env.ISSUER,
@@ -17,8 +16,10 @@ const oidc = new ExpressOIDC({
   logoutRedirectUri: 'http://localhost:3000/logged_out',
   scope: 'openid profile'
 });
-const mongoose = require('mongoose'); //warning save to ignore: https://developer.mongodb.com/community/forums/t/warning-accessing-non-existent-property-mongoerror-of-module-exports-inside-circular-dependency/15411
+const botName = "Chat Bot";
 
+const mongoose = require('mongoose'); //warning save to ignore: https://developer.mongodb.com/community/forums/t/warning-accessing-non-existent-property-mongoerror-of-module-exports-inside-circular-dependency/15411
+var userID;
 
 const dbURI  = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@companypub.xsm4m.mongodb.net/company-pub?retryWrites=true&w=majority`;
 mongoose
@@ -27,8 +28,10 @@ useUnifiedTopology: true,
 useNewUrlParser: true,
 })
 .then(() => {
+  console.log('db connected');
   oidc.on('ready', () => {
     server.listen(3000);
+    console.log('listening on port 3000');
   });
 })
 .catch(err => {
@@ -51,6 +54,7 @@ app.use(express.static("public"));
 app.get('/', (req, res) => {
   if (req.userContext.userinfo) {
     res.redirect(`/home${req.userContext.userinfo.name}${req.userContext.userinfo.sub}`);
+    userID = req.userContext.userinfo.sub;
   } else {
     res.send('Please Sign In');
   }
@@ -116,13 +120,23 @@ io.on('connection', socket => {
         console.log('data =' + data)
         console.log('old: ' + oldMessages);
         listOfMessages = oldMessages;
-        socket.emit('oldMessages', listOfMessages);
+        if (userID) {
+          socket.emit('oldMessages', listOfMessages, userID);
+        } else {
+          socket.emit('oldMessages', listOfMessages, false);
+        }
         socket.join(chatId);
       });
 
   });
   socket.on('chatMessage', (msg, chatId, username, userId) => {
-    io.to(chatId).emit('message', formatMessage(username, msg));
+    var ownMessage = false;
+    if (userID) {
+      if (userId == userID) {
+        ownMessage = true;
+      }
+    }
+    io.to(chatId).emit('message', formatMessage(username, msg, ownMessage));
     saveMessage(username, userId, msg, chatId);
   });
 });
