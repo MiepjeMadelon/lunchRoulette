@@ -1,15 +1,13 @@
 body{
   margin:0;
   overflow:hidden;
-}
-.sidebar{
-  background: #212529;
-  height: 100vh;
+  background-color: #0D0D0D;
   color: #F1F1F1;
 }
 .contentWrapper {
   margin: 0;
   padding: 0;
+  height: 100vh;
 }
 
 
@@ -25,12 +23,74 @@ video {
   object-fit: cover;
 }
 
+.sidebar{
+  background: #212529;
+  height: 100vh;
+  color: #F1F1F1;
+}
+.sidebar ul {
+  list-style-type: none; /* Remove bullets */
+}
+.sidebar a {
+  text-decoration: none;
+  color: #F1F1F1;
+}
+
+
+.sidebarTitle {
+  margin-left: -20px;
+  font-size: 1.25em;
+}
+
+
 
 
 .chat-messages {
+  padding-left:3%;
+  padding-right: 10%;
+  width:100%;
+  height:85%;
+  overflow: scroll;
+
+}
+
+
+.formholder {
+  width: 100%;
+}
+#chat-form {
+  width: 100%;
+}
+
+.chat-form input {
   width:60%;
-  height:70%;
-  border: 1px solid black;
+}
+
+.own-message h4{
+  font-size: 18px;
+}
+
+.message {
+  margin:20px;
+  padding:5px;
+}
+.message h4 {
+  font-size: 16px;
+}
+.message1 h4{
+  color: #AAFD32;
+}
+.message2 h4{
+  color: #1CAAFC;
+}
+.message3 h4{
+  color: #AA25FC;
+}
+.message4 h4{
+  color: #FD1BAA;
+}
+.message5 h4{
+  color: #FEAA29;
 }
 
 .dropdown-menu {

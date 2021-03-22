@@ -5,9 +5,8 @@ const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 const session = require('express-session');
 const { ExpressOIDC } = require('@okta/oidc-middleware');
-const {Message, formatMessage, saveMessage, findOldMessages} = require('./utils/messages');
 require('dotenv').config();
-const botName = "Chat Bot";
+const {Message, formatMessage, saveMessage, findOldMessages} = require('./utils/messages');
 const oidc = new ExpressOIDC({
   appBaseUrl: process.env.APP_BASE_URL,
   issuer: process.env.ISSUER,
@@ -17,8 +16,10 @@ const oidc = new ExpressOIDC({
   logoutRedirectUri: 'http://localhost:3000/logged_out',
   scope: 'openid profile'
 });
-const mongoose = require('mongoose'); //warning save to ignore: https://developer.mongodb.com/community/forums/t/warning-accessing-non-existent-property-mongoerror-of-module-exports-inside-circular-dependency/15411
+const botName = "Chat Bot";
 
+const mongoose = require('mongoose'); //warning save to ignore: https://developer.mongodb.com/community/forums/t/warning-accessing-non-existent-property-mongoerror-of-module-exports-inside-circular-dependency/15411
+var userID;
 
 const dbURI  = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@companypub.xsm4m.mongodb.net/company-pub?retryWrites=true&w=majority`;
 mongoose
@@ -27,8 +28,10 @@ useUnifiedTopology: true,
 useNewUrlParser: true,
 })
 .then(() => {
+  console.log('db connected');
   oidc.on('ready', () => {
     server.listen(3000);
+    console.log('listening on port 3000');
   });
 })
 .catch(err => {
@@ -48,13 +51,10 @@ app.all('*', oidc.ensureAuthenticated()); //should be after app.use, appearently
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-app.get('/room', (req, res) => {
-  res.redirect(`/room${uuidV4()}`);
-});
-
 app.get('/', (req, res) => {
   if (req.userContext.userinfo) {
     res.redirect(`/home${req.userContext.userinfo.name}${req.userContext.userinfo.sub}`);
+    userID = req.userContext.userinfo.sub;
   } else {
     res.send('Please Sign In');
   }
@@ -71,17 +71,25 @@ app.get('/logged_out', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/room:room', (req,res) => {
-  res.render('room', { roomId: req.params.room, username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
 
+
+
+app.get('/room/:chatName', (req, res) => {
+  res.redirect(`/room/${req.params.chatName}/${uuidV4()}`);
 });
 
+app.get('/room/:chatName/:room', (req,res) => {
+  res.render('room', { roomId: req.params.room, chatName: req.params.chatName ,username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub });
+  console.log(req.params.room, req.params.chatName)
+});
+
+
+//these two should be changed to be handled by the same app.get() function
 app.get('/general', (req, res) => {
-  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10"}) //should be general + companyId
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "general10", chatName: "general"}) //should be general + companyId
 });
-
 app.get('/memes', (req, res) => {
-  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10"}) //should be general + companyId
+  res.render('chat', {username: req.userContext.userinfo.name, uid: req.userContext.userinfo.sub, chatId: "memes10", chatName: "memes"}) //should be general + companyId
 });
 
 io.on('connection', socket => {
@@ -112,13 +120,23 @@ io.on('connection', socket => {
         console.log('data =' + data)
         console.log('old: ' + oldMessages);
         listOfMessages = oldMessages;
-        socket.emit('oldMessages', listOfMessages);
+        if (userID) {
+          socket.emit('oldMessages', listOfMessages, userID);
+        } else {
+          socket.emit('oldMessages', listOfMessages, false);
+        }
         socket.join(chatId);
       });
 
   });
   socket.on('chatMessage', (msg, chatId, username, userId) => {
-    io.to(chatId).emit('message', formatMessage(username, msg));
+    var ownMessage = false;
+    if (userID) {
+      if (userId == userID) {
+        ownMessage = true;
+      }
+    }
+    io.to(chatId).emit('message', formatMessage(username, msg, ownMessage));
     saveMessage(username, userId, msg, chatId);
   });
 });
